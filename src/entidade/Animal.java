@@ -1,13 +1,24 @@
 package entidade;
 
-public class Animal {
+import qualificador.Atributo;
+
+public class Animal extends Entidade {
 	
 	public Integer id;
 	public String nome;
+	@Atributo(testavel = true)
 	public Boolean sangueQuente;
+	@Atributo(testavel = true)
 	public Boolean daLuz;
+	@Atributo(testavel = true)
 	public Boolean temAsas;
 	public String classe;
+
+	public Animal(String[] instancia){
+
+		this(Integer.parseInt(instancia[0]), (String)instancia[1], Boolean.parseBoolean(instancia[2]),
+				Boolean.parseBoolean(instancia[3]), Boolean.parseBoolean(instancia[4]), (String)instancia[5]);
+	}
 	
 	public Animal(int i, String n, boolean s, boolean d, boolean t, String c){
 		
@@ -46,7 +57,7 @@ public class Animal {
 
 	@Override
 	public String toString() {
-		return "Animal [id=" + id + "]";
+		return "Animal [id=" + id + ", classe= "+classe+"]";
 	}
 
 	public Integer getId() {

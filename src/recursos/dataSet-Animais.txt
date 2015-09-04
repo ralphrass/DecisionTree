@@ -1,0 +1,12 @@
+1,Flamingo,true,false,true,Nao-Mamifero
+2,Gaivota,true,false,true,Nao-Mamifero
+3,Elefante,true,true,false,Mamifero
+4,Macaco,true,true,false,Mamifero
+5,Jacare,false,false,false,Nao-Mamifero
+6,Humano,true,true,false,Mamifero
+7,Gafanhoto,false,false,true,Nao-Mamifero
+8,Arara,true,false,true,Nao-Mamifero
+9,Ornitorrinco,true,false,false,Mamifero
+10,Tubarao,false,false,false,Nao-Mamifero
+11,Baleia,false,true,false,Mamifero
+12,Gnu,true,true,false,Mamifero

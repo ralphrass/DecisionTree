@@ -3,6 +3,7 @@ package entidade;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Nodo {
 
@@ -10,7 +11,7 @@ public class Nodo {
 	//Aresta, Nodo Filho
 	private Map<String, Nodo> nodosFilhos = new HashMap<String, Nodo>();
 	private String label;
-	private List<Object> populacao;
+	private Set<Entidade> populacao;
 
 	public Nodo(){ }
 	
@@ -35,10 +36,10 @@ public class Nodo {
 		return label;
 	}
 	public void setLabel(String label) { this.label = label; }
-	public List<Object> getPopulacao() {
+	public Set<Entidade> getPopulacao() {
 		return populacao;
 	}
-	public void setPopulacao(List<Object> populacao) {
+	public void setPopulacao(Set<Entidade> populacao) {
 		this.populacao = populacao;
 	}
 

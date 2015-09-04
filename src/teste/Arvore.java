@@ -6,292 +6,320 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import entidade.Animal;
+import entidade.CancerMamaRecorrente;
+import entidade.Entidade;
 import entidade.Nodo;
+import qualificador.Atributo;
+import util.LerArquivoAnimais;
+import util.LerArquivoCancerMama;
 
-public class Arvore {
+import javax.smartcardio.ATR;
 
-	static List<Object> dataSet = new ArrayList<Object>();
-	static List<Object> valoresPossiveisDoAtributo = new ArrayList<Object>();
-	static List<Object> populacao = new ArrayList<Object>();
+public class Arvore<E extends Entidade> {
+
+	static Set<Entidade> dataSet = new HashSet<>();
+	//static Set<Entidade> totalDeInstancias = new HashSet<>();
+
+	static Set<Object> valoresPossiveisDoAtributo;
+	static Set<Object> valoresPossiveisDoAtributoDeClasse = new HashSet<>();
 	
 	static List<Field> atributosDisponiveis = new ArrayList<Field>();
 
 	static int indiceArvore = 0;
 				
 	static Field ATRIBUTO_DE_CLASSE;
+
+	final static String SEPARADOR_ARVORE = "----";
 	
 	public static void main(String args[]) throws NoSuchFieldException, SecurityException{
-				
-		ATRIBUTO_DE_CLASSE = Animal.class.getField("classe");
-						
-		preencherDataSet();
-		preencherAtributosDisponíveis();
 
-		Nodo raiz = crescerArvore(populacao);
+		Field[] atributos = definirInstancia();
+		preencherAtributosDisponiveis(atributos);
 
-		System.out.print(raiz);
+		Nodo raiz = crescerArvore(dataSet);
+
+		String nivelRaiz = "";
+
+		mostrarArvore(raiz, nivelRaiz);
+	}
+
+	public static void mostrarArvore(Nodo raiz, String nivelNodo){
+
+		for (Entry<String, Nodo> nodoFilho : raiz.getNodosFilhos().entrySet()) {
+
+			if (nodoFilho.getValue().getNodosFilhos() != null
+					&& !nodoFilho.getValue().getNodosFilhos().isEmpty()) {
+
+				System.out.println(nivelNodo + nodoFilho.getKey());
+
+				mostrarArvore(nodoFilho.getValue(), nivelNodo.concat(SEPARADOR_ARVORE));
+
+			} else {
+
+				String labelFilho = nodoFilho.getValue().getLabel();
+
+				System.out.println(nivelNodo + nodoFilho.getKey());
+				System.out.println(nivelNodo.concat(SEPARADOR_ARVORE) + labelFilho + " - DataSet: "+ nodoFilho.getValue().getPopulacao().size());
+			}
+		}
 	}
 	
-	public static void preencherAtributosDisponíveis(){
-		
-		Field[] atributos = Animal.class.getFields();
-		
-		//apenas booleanos
+	public static void preencherAtributosDisponiveis(Field[] atributos){
+
+		//apenas atributos testaveis
 		for (int i=0; i<atributos.length; i++){
-			
-			String tipo = atributos[i].getType().getTypeName();
-			String tipoAceitavel = Boolean.class.getTypeName();
-			
-			if (tipo.equals(tipoAceitavel)){
-				
+
+			if (atributos[i].getAnnotation(Atributo.class) != null){
+
 				atributosDisponiveis.add(atributos[i]);
 			}
 		}
-
-		atributosDisponiveis.add(ATRIBUTO_DE_CLASSE);
 	}
 	
-	public static void preencherDataSet(){
-		
-		Animal a0 = new Animal(1, "Flamingo", true, false, true, "Nao-Mamifero");
-		Animal a1 = new Animal(2, "Gaivota", true, false, true, "Nao-Mamifero");
-		Animal a2 = new Animal(3, "Elefante", true, true, false, "Mamifero");
-		Animal a3 = new Animal(4, "Macaco", true, true, false, "Mamifero");
-		Animal a4 = new Animal(5, "Jacare", false, false, false, "Nao-Mamifero");
-		Animal a5 = new Animal(6, "Humano", true, true, false, "Mamifero");
-		
-		dataSet.add(a0);
-		dataSet.add(a1);
-		dataSet.add(a2);
-		dataSet.add(a3);
-		dataSet.add(a4);
-		dataSet.add(a5);
+	public static Field[] definirInstancia(){
 
-		Animal a6 = new Animal(7, "Gafanhoto", false, false, true, "Nao-Mamifero");
-		Animal a7 = new Animal(8, "Arara", true, false, true, "Nao-Mamifero");
-		Animal a8 = new Animal(9, "Ornitorrinco", true, false, false, "Mamifero");
-		Animal a9 = new Animal(10, "Tubarao", false, false, false, "Nao-Mamifero");
-		Animal a10 = new Animal(11, "Baleia", false, true, false, "Mamifero");
-		Animal a11 = new Animal(12, "Gnu", true, true, false, "Mamifero");
+		Field[] atributos = null;
 
-		dataSet.add(a6);
-		dataSet.add(a7);
-		dataSet.add(a8);
-		dataSet.add(a9);
-		dataSet.add(a10);
-		dataSet.add(a11);
-		
-		populacao = dataSet;
+		//TODO Alterar para cada Entidade
+		try {
+
+			ATRIBUTO_DE_CLASSE = CancerMamaRecorrente.class.getField("classe");
+			dataSet = new LerArquivoCancerMama().lerInstancias();
+			atributos = CancerMamaRecorrente.class.getFields();
+			/*ATRIBUTO_DE_CLASSE = Animal.class.getField("classe");
+			dataSet = new LerArquivoAnimais().lerInstancias();
+			atributos = Animal.class.getFields();*/
+
+			//ObtÃ©m todos os valores possÃ­veis do atributos de classe
+			for (Entidade instancia : dataSet) {
+
+				valoresPossiveisDoAtributoDeClasse.add(obterValorDoAtributo(instancia, ATRIBUTO_DE_CLASSE));
+			}
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+		return atributos;
 	}
 		
-	public static Nodo crescerArvore(List<Object> populacao){
+	public static Nodo crescerArvore(Set<Entidade> listaDeInstancias){
 		
 		Nodo raiz = null;
 		
-		if (deveParar(populacao) == true){
+		if (deveParar(listaDeInstancias) == true){
 		
 			Nodo folha = new Nodo(indiceArvore++);
-			folha.setPopulacao(populacao);
-			folha.setLabel(classificar(populacao));
+			folha.setPopulacao(listaDeInstancias);
+			folha.setLabel(classificar(listaDeInstancias));
 			
 			return folha;
 			
 		} else {
-									
-			Field melhorAtributo = encontrarMelhorDivisao(populacao);
-			valoresPossiveisDoAtributo = obterValoresPossiveisDoAtributo(melhorAtributo, populacao);
+
+			Map<Field, Map<Object, Set<Entidade>>> mapaDeInstanciasDoAtributoVencedor = encontrarMelhorDivisao(listaDeInstancias);
+
+			Field melhorAtributo = (Field)mapaDeInstanciasDoAtributoVencedor.keySet().toArray()[0];
+			Map<Object, Set<Entidade>> mapaDeInstanciasPorValor = mapaDeInstanciasDoAtributoVencedor.get(melhorAtributo);
 
 			raiz = new Nodo(indiceArvore++);
 			raiz.setLabel(melhorAtributo.getName());
-			
+
+			//Para cada valor possivel do atributo
 			for (Object valor : valoresPossiveisDoAtributo) {
 
-				List<Object> subPopulacao = obterSubPopulacaoParaOValor(populacao, melhorAtributo, valor);
-				populacao.removeAll(subPopulacao);
-				Nodo nodoFilho = crescerArvore(subPopulacao);
+				try {
 
-				//Ajusta a label da ARESTA, concatenando com a descrição formal do melhor atributo
-				raiz.getNodosFilhos().put(melhorAtributo.getName() + " = "+valor, nodoFilho);
+					Set<Entidade> subListaDeInstancias = mapaDeInstanciasPorValor.get(valor);
+					listaDeInstancias.removeAll(subListaDeInstancias);
+					Nodo nodoFilho = crescerArvore(subListaDeInstancias);
+
+					//Ajusta a label da ARESTA, concatenando com a descricao formal do melhor atributo
+					raiz.getNodosFilhos().put(melhorAtributo.getName() + " = "+valor, nodoFilho);
+
+				} catch (Exception e) {
+
+					e.printStackTrace();
+				}
 			}
 		}
 		
 		return raiz;
 	}
-	
-	public static String classificar(List<Object> populacao){
-		
-		//Verifica qual classe mais se repete na população recebida e a retorna
-		Map<Object, Integer> contadorValores = new HashMap<Object, Integer>();
-		
-		for (Object item : populacao) {
+
+	/**
+	 * Verifica qual classe mais se repete na populacao recebida e a retorna
+	 * */
+	public static String classificar(Set<Entidade> populacao){
+
+		Map<Object, Set<Entidade>> contadorValores = new HashMap<>();
+		Set<Entidade> entidades = null;
+
+		for (Entidade item : populacao) {
 			
 			Object valor = obterValorDoAtributo(item, ATRIBUTO_DE_CLASSE);
 			
 			if (contadorValores.containsKey(valor)){
-			
-				Integer valorAtual = contadorValores.get(valor);
-				contadorValores.replace(valor, valorAtual++);
+
+				entidades = contadorValores.get(valor);
 				
 			} else {
-			
-				contadorValores.put(valor, 1);
+
+				entidades = new HashSet<>();
 			}
+
+			entidades.add(item);
+			contadorValores.put(valor, entidades);
 		}
 		
 		Object maisSeRepete = null;
-		Integer contador=0;
+		Integer contador = 0;
 		
-		for (Entry<Object, Integer> entry : contadorValores.entrySet()) {
-			
-			if (entry.getValue() > contador) {
+		for (Entry<Object, Set<Entidade>> entry : contadorValores.entrySet()) {
+
+			Integer tamanhoDataSet = entry.getValue().size();
+
+			if (tamanhoDataSet > contador) {
 				
-				contador = entry.getValue();
+				contador = tamanhoDataSet;
 				maisSeRepete = entry.getKey();
 			}
 		}
 		
 		return ATRIBUTO_DE_CLASSE.getName()+" = "+maisSeRepete.toString();
 	}
-	
+
 	/**
-	 * Mapeia cada valor possível de um atributo como chave que aponta para uma lista de registros que possuem aquele valor
+	 * Varre os atributos disponiveis contando quantas instancias assumem cada valor possivel destes atributos
 	 * */
-	public static Map<Object, List<Object>> obterSubPopulacoes(List<Object> populacaoP, List<Object> valoresPossiveisDoAtributo, Field atributo){
-		
-		Map<Object, List<Object>> subPopulacoes = new HashMap<Object, List<Object>>();
-		
-		for (Object valorDoAtributo : valoresPossiveisDoAtributo) {
-			
-			List<Object> subPopulacao = obterSubPopulacaoParaOValor(populacaoP, atributo, valorDoAtributo);
-			
-			subPopulacoes.put(valorDoAtributo, subPopulacao);
-		}
-		
-		return subPopulacoes;
-	}
-	
-	public static List<Object> obterSubPopulacaoParaOValor(List<Object> populacao, Field melhorAtributo, Object valorAresta){
-		
-		List<Object> subPopulacao = new ArrayList<Object>();
-		
-		for (Object item : populacao){
-			
-			try {
-			
-				//Busca o item de acordo com o índice na população 
-				Animal animal = (Animal)item;				
-								
-				//Busca o valor do atributo selecionado para o objeto em questão
-				Object valor = melhorAtributo.get(animal);
-				
-				//Se o valor do atributo do objeto corrente é o mesmo que o valor da aresta do nodo
-				if (valor.equals(valorAresta)){
-					
-					subPopulacao.add(animal);
-				}
-				
-			} catch (Exception e) {
-				
-				e.printStackTrace();
-			}
-		}
-			
-		return subPopulacao;
-	}
-		
-	public static List<Object> obterValoresPossiveisDoAtributo(Field atributo, List<Object> populacao){
-		
-		List<Object> valoresPossiveis = new ArrayList<Object>();
-		
-		for (Object item : populacao){
-		
-			Animal animal = (Animal)item;
-			Object valor = obterValorDoAtributo(animal, atributo);
-			
-			if (!valoresPossiveis.contains(valor)){
-				
-				valoresPossiveis.add(valor);
-			}
-		}
-		
-		return valoresPossiveis;
-	}
+	public static Map<Field, Map<Object, Set<Entidade>>> encontrarMelhorDivisao(Set<Entidade> populacao){
 
-	public static Field encontrarMelhorDivisao(List<Object> populacao){
-
+		Map<Object, Set<Entidade>> mapaDeInstanciasPorValor;
+		Map<Field, Map<Object, Set<Entidade>>> mapaDeAtributos = new HashMap<>();
+		Map<Field, Set<Object>> mapaDeValoresPossiveis = new HashMap<>();
 		Field melhorAtributo = null;
 		double melhorGini = 1.0;
 
-		//Para cada atributo dos objetos da população, pega o valor deste atributo e divide os objetos de acordo com este valor
+		//Para cada atributo dos objetos da populacao, pega o valor deste atributo e divide os objetos de acordo com este valor
 		for (Field atributoTeste : atributosDisponiveis) {
 
-			Map<Object, Integer> contadorValores = new HashMap<Object, Integer>();
+			//Obtem os valores possiveis do atributo por iteracao
+			Set<Object> valoresPossiveis = new HashSet<>();
+			Map<Object, Set<Entidade>> subMapaDeInstanciasPorValor = new HashMap<>();
 
-			for (Object item : populacao) {
+			//Percorre todas as instÃ¢ncias para mapeÃ¡-las pelo valor do atributo corrente
+			for (Entidade item : populacao) {
 
-				Animal animal = (Animal)item;
-				Object valor = obterValorDoAtributo(animal, atributoTeste);
+				Entidade instancia = (Entidade)item;
+				Object valor = obterValorDoAtributo(instancia, atributoTeste);
 
-				if (contadorValores.containsKey(valor)){
+				valoresPossiveis.add(valor);
 
-					Integer valorAtual = contadorValores.get(valor);
-					valorAtual = valorAtual + 1;
-					contadorValores.replace(valor, valorAtual);
+				//Pega as instancias mapeadas ao valor atual
+				Set<Entidade> instancias = null;
+
+				//Valor ainda nÃ£o mapeado
+				if (subMapaDeInstanciasPorValor.containsKey(valor)) {
+
+					instancias = subMapaDeInstanciasPorValor.get(valor);
 
 				} else {
 
-					contadorValores.put(valor, 1);
+					instancias = new HashSet<>();
 				}
-			}
 
-			double giniAtual = obterIndiceGini(contadorValores, populacao.size());
+				instancias.add(item);
+				subMapaDeInstanciasPorValor.put(valor, instancias);
+			} // loop das instancias
 
-			//Atualiza o índice Gini e o atrubuto comparativo
+			//obtÃ©m o gini atual para as instÃ¢ncias mapeadas por valor possÃ­vel do atributo
+			double giniAtual = obterIndiceGini(subMapaDeInstanciasPorValor, populacao.size());
+
+			mapaDeAtributos.put(atributoTeste, subMapaDeInstanciasPorValor);
+			mapaDeValoresPossiveis.put(atributoTeste, valoresPossiveis);
+
+			//Atualiza o indice Gini e o atrubuto comparativo
 			if (melhorGini > giniAtual) {
 
 				melhorGini = giniAtual;
 				melhorAtributo = atributoTeste;
 			}
 
-		}//laço atributos
+		}//laco atributos
 
-		atualizarAtributosDisponíveis(melhorAtributo);
-				
-		return melhorAtributo;
+		//Atualiza os valores possiveis do atributo e o mapa de instancias de acordo com o atributo vencedor
+		valoresPossiveisDoAtributo = mapaDeValoresPossiveis.get(melhorAtributo);
+		Map<Object, Set<Entidade>> mapaDeInstanciasVencedor = mapaDeAtributos.get(melhorAtributo);
+		mapaDeAtributos = new HashMap<>();
+		mapaDeAtributos.put(melhorAtributo, mapaDeInstanciasVencedor);
+
+		atributosDisponiveis.remove(melhorAtributo);
+
+		return mapaDeAtributos;
 	}
 	
-	public static void atualizarAtributosDisponíveis(Field atributo){
+	public static double obterIndiceGini(Map<Object, Set<Entidade>> subMapaDeInstanciasPorValor, double tamanhoTotal){
 
-		if (atributosDisponiveis.size() == 0){
+		double gini = 0;
 
-			return;
+		//Percorre os possÃ­veis nodos do atributo atual
+		for (Entry<Object, Set<Entidade>> entrada : subMapaDeInstanciasPorValor.entrySet()){
+
+			Map<Object, Integer> qtInstanciasPorValorDoAtributoDeClasse =
+					inicializarMapaDeQuantidadeDeInstanciasPorValorDoAtributoDeClasse();
+			double giniDoNodo = 0d;
+			int totalDeInstanciasDoNodo = 0;
+
+			//Percorre as instÃ¢ncias do nodo atual e conta quantas instÃ¢ncias tem por valor do atributo de classe
+			for (Entidade instancia : entrada.getValue()){
+
+				Object valorDoAtributoDeClasse = obterValorDoAtributo(instancia, ATRIBUTO_DE_CLASSE);
+				Integer valorAtual = qtInstanciasPorValorDoAtributoDeClasse.get(valorDoAtributoDeClasse);
+				qtInstanciasPorValorDoAtributoDeClasse.replace(valorDoAtributoDeClasse, ++valorAtual);
+
+			}//laÃ§o das instÃ¢ncias
+
+			totalDeInstanciasDoNodo = entrada.getValue().size();
+
+			giniDoNodo = calcularGiniDoNodo(qtInstanciasPorValorDoAtributoDeClasse, totalDeInstanciasDoNodo);
+
+			//Pondera o gini de todos os nodos
+			gini = gini + ( (totalDeInstanciasDoNodo/tamanhoTotal) * giniDoNodo);
 		}
 
-		int i = 0;
-		
-		while (true) {
-			
-			if (atributosDisponiveis.get(i).equals(atributo)){
-				break;
-			}
-			
-			i++;
-		}
-		
-		atributosDisponiveis.remove(i);
+		return gini;
 	}
-	
-	public static double obterIndiceGini(Map<Object, Integer> contadorValores, double tamanhoTotal){
 
-		double gini = 1.0;
-		double resultado = 0.0;
+	/**
+	 * Inicializa o mapa com "zero" para cada valor possÃ­vel do atributo de instÃ¢ncia
+	 * */
+	static Map<Object, Integer> inicializarMapaDeQuantidadeDeInstanciasPorValorDoAtributoDeClasse(){
 
-		for (Entry<Object, Integer> entrada : contadorValores.entrySet()){
-			Integer valor = entrada.getValue();
-			resultado = resultado + Math.pow((valor / tamanhoTotal), 2);
+		Map<Object, Integer> mapa = new HashMap<>();
+
+		for (Object valor : valoresPossiveisDoAtributoDeClasse) {
+
+			mapa.put(valor, 0);
 		}
 
-		return (gini - resultado);
+		return mapa;
+	}
+
+	static double calcularGiniDoNodo(Map<Object, Integer> qtInstanciasPorValorDoAtributoDeClasse,
+							   final double totalDeInstanciasDoNodo){
+
+		double giniDoNodo = 1d;
+		double giniDoValor;
+
+		for (Entry<Object, Integer> entrada : qtInstanciasPorValorDoAtributoDeClasse.entrySet()){
+
+			Integer qtDeInstancias = entrada.getValue();
+			giniDoValor = Math.pow( (qtDeInstancias/totalDeInstanciasDoNodo), 2.0);
+			giniDoNodo = giniDoNodo - giniDoValor;
+		}
+
+		return giniDoNodo;
 	}
 	
 	public static Object obterValorDoAtributo(Object item, Field atributoTeste){
@@ -302,7 +330,9 @@ public class Arvore {
 		
 		} catch (Exception e) {
 
-			System.out.println("Falha ao obter o valor do atributo " + atributoTeste.getName());
+			if (atributoTeste != null){
+				System.out.println("Falha ao obter o valor do atributo " + atributoTeste.getName());
+			}
 			e.printStackTrace();
 		}
 		
@@ -310,44 +340,35 @@ public class Arvore {
 	}
 
 	/**
-	 * Retorna "true" quando todos os valores dos atributos de classe da população forem iguais
+	 * Retorna "true" quando todos os valores dos atributos de classe da populacao forem iguais
 	 * */
-	public static boolean deveParar(List<Object> populacao){
-			
+	public static boolean deveParar(Set<Entidade> populacao) {
+
+		if (atributosDisponiveis.size() == 0){
+
+			return true;
+		}
+
 		final int limiteMaximo = populacao.size();
-				
-		for (int i=0; i<limiteMaximo; i++){
-			
-			final Animal registroCorrente = (Animal)populacao.get(i);
-			final Object valorCorrente = obterValorDoAtributoDeClasse(registroCorrente);
-						
-			for (int j=i+1; j<limiteMaximo; j++){
-			
-				final Animal registroAComparar = (Animal)populacao.get(j);
-				final Object valorAComparar = obterValorDoAtributoDeClasse(registroAComparar);
-				
-				if (!valorCorrente.equals(valorAComparar)){
-					
+		Object[] instancias = populacao.toArray();
+
+		for (int i = 0; i < limiteMaximo; i++) {
+
+			final Entidade registroCorrente = (Entidade)instancias[i];
+			final Object valorCorrente = obterValorDoAtributo(registroCorrente, ATRIBUTO_DE_CLASSE);
+
+			for (int j = i + 1; j < limiteMaximo; j++) {
+
+				final Entidade registroAComparar = (Entidade)instancias[j];
+				final Object valorAComparar = obterValorDoAtributo(registroAComparar, ATRIBUTO_DE_CLASSE);
+
+				if (!valorCorrente.equals(valorAComparar)) {
+
 					return false;
 				}
 			}
 		}
-		
+
 		return true;
-	}
-	
-	public static Object obterValorDoAtributoDeClasse(Object objeto){
-		
-		try {
-		
-			Object valor = ATRIBUTO_DE_CLASSE.get(objeto);
-			return valor;
-			
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-		}
-		
-		return null;
 	}
 }

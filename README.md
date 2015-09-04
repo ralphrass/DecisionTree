@@ -24,3 +24,8 @@ Considerações:
 Utilizar Java 1.8 ou superior.
 
 Construído no IntelliJ Idea 14.1.4.
+
+
+Fonte:
+
+"Introduction To Data Mining" Pang-Ning Tan, Michael Steinbach, Vipin Kumar {2006 - páginas 151 à 165}

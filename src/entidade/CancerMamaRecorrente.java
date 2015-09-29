@@ -1,5 +1,6 @@
 package entidade;
 
+import enumerador.TipoAtributo;
 import qualificador.Atributo;
 
 /**
@@ -7,23 +8,23 @@ import qualificador.Atributo;
  */
 public class CancerMamaRecorrente extends Entidade {
 
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String idade;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String menopausa;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String tamanhoTumor;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String invNodos;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public Boolean capsNodos;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String grauMaligno;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public Boolean seioEsquerdo;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public String quadranteSeio;
-    @Atributo(testavel = true)
+    @Atributo(testavel = true, tipoAtributo = TipoAtributo.DISCRETO)
     public Boolean irradiat;
     public String classe;
 

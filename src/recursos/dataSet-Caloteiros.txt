@@ -1,0 +1,10 @@
+60,Nao
+70,Nao
+75,Nao
+85,Sim
+90,Sim
+95,Sim
+100,Nao
+120,Nao
+125,Nao
+220,Nao

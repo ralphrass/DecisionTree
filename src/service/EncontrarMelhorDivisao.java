@@ -108,7 +108,7 @@ public class EncontrarMelhorDivisao {
         mapaDeAtributos = new HashMap<>();
         mapaDeAtributos.put(melhorAtributoGlobal, mapaDeInstanciasVencedor);
 
-        Arvore.atributosDisponiveis.remove(melhorAtributoGlobal);
+        //Arvore.atributosDisponiveis.remove(melhorAtributoGlobal);
 
         return mapaDeAtributos;
     }

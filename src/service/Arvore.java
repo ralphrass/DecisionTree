@@ -134,8 +134,6 @@ public class Arvore<E extends Entidade> {
 			Map<Field, Map<Object, Set<Entidade>>> mapaDeInstanciasDoAtributoVencedor =
 					EncontrarMelhorDivisao.encontrarMelhorDivisao(listaDeInstancias);
 
-			//TODO diferenciar atributo DISCRETO de CONTINUO
-
 			Field melhorAtributo = (Field)mapaDeInstanciasDoAtributoVencedor.keySet().toArray()[0];
 			Map<Object, Set<Entidade>> mapaDeInstanciasPorValor = mapaDeInstanciasDoAtributoVencedor.get(melhorAtributo);
 
@@ -237,13 +235,19 @@ public class Arvore<E extends Entidade> {
 
 	/**
 	 * Retorna "true" quando todos os valores dos atributos de classe da populacao forem iguais
+	 * ou se a população tiver um tamanho menor que 3.
 	 * */
 	public static boolean deveParar(Set<Entidade> populacao) {
 
-		if (atributosDisponiveis.size() == 0){
+		if (populacao.size() < 3) {
 
 			return true;
 		}
+
+		/*if (atributosDisponiveis.size() == 0){
+
+			return true;
+		}*/
 
 		final int limiteMaximo = populacao.size();
 		Object[] instancias = populacao.toArray();
